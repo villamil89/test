@@ -1,0 +1,50 @@
+package com.myspace.proyectopruebasic.rules;
+
+import com.myspace.proyectopruebasic.*;
+
+rule "Validar Pedido"
+    salience 20
+    when
+        pedido: Pedido();
+        precio: Double() from accumulate (
+            Producto( x: precio) from pedido.getProductos(),
+            init (double total = 0;),
+            action (total = total + x;),
+            result (new Double(total))
+        );
+    then
+        pedido.setPrecioTotal(precio);
+end 
+
+
+rule "Validar cliente Silver"
+    salience 15
+    when
+        pedido: Pedido();
+        cliente: Cliente( estado == SILVER_CLIENTE ) from pedido.getCliente();
+    then
+        pedido.setPrecioTotal(pedido.getPrecioTotal() * (1 - (5 / 100d) ));
+end
+
+
+rule "Validar cliente Gold"
+    salience 15
+    when
+        pedido: Pedido();
+        cliente: Cliente( estado == GOLD_CLIENTE ) from pedido.getCliente();
+    then
+        pedido.setPrecioTotal(pedido.getPrecioTotal() * (1 - (10 / 100d) ));
+end
+
+
+rule "Validar fecha"
+    salience 10
+    date-effective "01-DEC-2019"
+    date-expires "31-DEC-2019"
+    when
+        pedido: Pedido(productos.size() >= 10);
+    then
+        pedido.setPrecioTotal(pedido.getPrecioTotal() * (1 - (15 / 100d) ));
+end
+
+
